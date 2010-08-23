@@ -1,25 +1,29 @@
-from random import choice
+import logging
 import os
+import random
+import re
+import setuptools
+import shutil
 import subprocess
 import urllib2
-import shutil
-import logging
-import re
+import zc.recipe.egg
 
 from zc.buildout import UserError
-import zc.recipe.egg
-import setuptools
+
 
 script_template = {
     'wsgi': '''
 
 %(relative_paths_setup)s
 import sys
+
+
 sys.path[0:0] = [
   %(path)s,
-  ]
+]
 %(initialization)s
 import %(module_name)s
+
 
 application = %(module_name)s.%(attrs)s(%(arguments)s)
 ''',
@@ -27,9 +31,11 @@ application = %(module_name)s.%(attrs)s(%(arguments)s)
 
 %(relative_paths_setup)s
 import sys
+
+
 sys.path[0:0] = [
   %(path)s,
-  ]
+]
 %(initialization)s
 import %(module_name)s
 
@@ -47,12 +53,12 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-DATABASE_ENGINE = 'sqlite3'    # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = '%(project)s.db'
-DATABASE_USER = ''             # Not used with sqlite3.
-DATABASE_PASSWORD = ''         # Not used with sqlite3.
-DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
-DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': '%(project)s.db',
+    },
+}
 
 TIME_ZONE = 'America/Chicago'
 
@@ -84,7 +90,6 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = '%(urlconf)s'
 
-
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -110,14 +115,16 @@ from %(project)s.settings import *
 
 development_settings = '''
 from %(project)s.settings import *
-DEBUG=True
-TEMPLATE_DEBUG=DEBUG
+
+DEBUG = TEMPLATE_DEBUG = DEBUG
 '''
 
 urls_template = '''
 from django.conf.urls.defaults import patterns, include, handler500
 from django.conf import settings
 from django.contrib import admin
+
+
 admin.autodiscover()
 
 handler500 # Pyflakes
@@ -489,4 +496,4 @@ class Recipe(object):
 
     def generate_secret(self):
         chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
-        return ''.join([choice(chars) for i in range(50)])
+        return ''.join([random.choice(chars) for i in range(50)])
