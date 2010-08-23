@@ -183,6 +183,11 @@ class Recipe(object):
         self.install_from_cache = self.buildout['buildout'].get(
             'install-from-cache', '').strip() == 'true'
 
+        # Generate the ``site_py_dest`` option
+        # http://svn.zope.org/zc.buildout/branches/gary-betafix/SYSTEM_PYTHON_HELP.txt?view=markup
+        options['parts-directory'] = os.path.join(
+            buildout['options']['parts-directory'], self.name)
+
 
     def install(self):
         location = self.options['location']
@@ -193,6 +198,8 @@ class Recipe(object):
         download_dir = self.buildout['buildout']['download-cache']
         if not os.path.exists(download_dir):
             os.mkdir(download_dir)
+        if not os.path.exists(self.options['parts-directory']):
+            os.mkdir(self.options['parts-directory'])
 
         version = self.options['version']
         # Remove a pre-existing installation if it is there
@@ -367,9 +374,11 @@ class Recipe(object):
             [(self.options.get('control-script', self.name),
               'djangorecipe.manage', 'main')],
             ws, self.options['executable'], self.options['bin-directory'],
-            extra_paths = extra_paths,
-            arguments= "'%s.%s'" % (project,
-                                    self.options['settings']))
+            extra_paths=extra_paths,
+            site_py_dest=self.options['parts-directory'],
+            script_arguments="'%s.%s'" % (project,
+                                    self.options['settings']),
+        )
 
 
 
@@ -383,10 +392,12 @@ class Recipe(object):
                 working_set, self.options['executable'],
                 self.options['bin-directory'],
                 extra_paths = extra_paths,
-                arguments= "'%s.%s', %s" % (
+                site_py_dest=self.options['parts-directory'],
+                script_arguments= "'%s.%s', %s" % (
                     self.options['project'],
                     self.options['settings'],
-                    ', '.join(["'%s'" % app for app in apps])))
+                    ', '.join(["'%s'" % app for app in apps])),
+            )
 
 
     def create_project(self, project_dir):
@@ -436,10 +447,13 @@ class Recipe(object):
                       'djangorecipe.%s' % protocol, 'main')],
                     ws,
                     self.options['executable'], 
-                    self.options['bin-directory'],extra_paths = extra_paths,
-                    arguments= "'%s.%s', logfile='%s'" % (
+                    self.options['bin-directory'],
+                    extra_paths = extra_paths,
+                    site_py_dest=self.options['parts-directory'],
+                    script_arguments= "'%s.%s', logfile='%s'" % (
                         project, self.options['settings'],
-                        self.options.get('logfile')))
+                        self.options.get('logfile')),
+                )
         zc.buildout.easy_install.script_template = _script_template
 
     def is_svn_url(self, version):
