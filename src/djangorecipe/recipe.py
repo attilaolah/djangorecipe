@@ -363,7 +363,7 @@ class Recipe(object):
 
     def create_manage_script(self, extra_paths, ws):
         project = self.options.get('projectegg', self.options['project'])
-        zc.buildout.easy_install.scripts(
+        zc.buildout.easy_install.sitepackage_safe_scripts(
             [(self.options.get('control-script', self.name),
               'djangorecipe.manage', 'main')],
             ws, self.options['executable'], self.options['bin-directory'],
@@ -377,7 +377,7 @@ class Recipe(object):
         apps = self.options.get('test', '').split()
         # Only create the testrunner if the user requests it
         if apps:
-            zc.buildout.easy_install.scripts(
+            zc.buildout.easy_install.sitepackage_safe_scripts(
                 [(self.options.get('testrunner', 'test'),
                   'djangorecipe.test', 'main')],
                 working_set, self.options['executable'],
@@ -430,7 +430,7 @@ class Recipe(object):
             if self.options.get(protocol, '').lower() == 'true':
                 project = self.options.get('projectegg',
                                            self.options['project'])
-                zc.buildout.easy_install.scripts(
+                zc.buildout.easy_install.sitepackage_safe_scripts(
                     [('%s.%s' % (self.options.get('control-script', self.name),
                                 protocol),
                       'djangorecipe.%s' % protocol, 'main')],
